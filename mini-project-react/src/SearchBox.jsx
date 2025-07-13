@@ -9,14 +9,16 @@ export default function SearchBox({ updateInfo }) {
   const API_URL = "https://api.openweathermap.org/data/2.5/weather";
   const API_KEY = "e997129e96ba62379b5e9c3b88975cee";
 
-  const getWeatherInfo = async () => {
+  const getWeatherInfo = async (cityName) => {
     try {
-      let response = await fetch(`${API_URL}?q=${city}&appid=${API_KEY}&units=metric`);
+      let response = await fetch(
+        `${API_URL}?q=${encodeURIComponent(cityName)}&appid=${API_KEY}&units=metric`
+      );
       let jsonResponse = await response.json();
 
       if (jsonResponse.cod === 200) {
         let result = {
-          city: city,
+          city: cityName,
           temp: jsonResponse.main.temp,
           tempMin: jsonResponse.main.temp_min,
           tempMax: jsonResponse.main.temp_max,
@@ -24,7 +26,6 @@ export default function SearchBox({ updateInfo }) {
           feelsLike: jsonResponse.main.feels_like,
           weather: jsonResponse.weather[0].description,
         };
-        updateInfo(result);
         return result;
       } else {
         alert("City not found!");
@@ -40,9 +41,18 @@ export default function SearchBox({ updateInfo }) {
 
   const handleSubmit = async (evt) => {
     evt.preventDefault();
-    setCity("");
-    let newInfo=await getWeatherInfo();
-    updateInfo(newInfo);
+    const trimmedCity = city.trim();
+
+    if (!trimmedCity) {
+      alert("Please enter a valid city name.");
+      return;
+    }
+
+    const newInfo = await getWeatherInfo(trimmedCity);
+    if (newInfo) {
+      updateInfo(newInfo);
+      setCity(""); // Clear input only after successful update
+    }
   };
 
   return (
